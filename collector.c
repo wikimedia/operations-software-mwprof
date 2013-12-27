@@ -136,7 +136,8 @@ dumpData(FILE *fd) {
     GList *keys;
     gchar **tokens;
     gchar *key;
-    gchar db[128] = "", prev_db[128] = "", host[128] = "", prev_host[128] = "";
+    gchar db[128] = "", prev_db[128] = "", host[128] = "", prev_host[128] = "",
+          task[1024] = "";
     gint in_db = 0, in_host = 0;
     gint i, points;
     CallStats *entry;
@@ -155,6 +156,7 @@ dumpData(FILE *fd) {
         g_assert(g_strv_length(tokens) == 3);
         g_strlcpy(db, tokens[0], 128);
         g_strlcpy(host, tokens[1], 128);
+        g_strlcpy(task, tokens[2], 1024);
         g_strfreev(tokens);
 
         /* Get DB */
@@ -180,15 +182,15 @@ dumpData(FILE *fd) {
         }
 
         /* Get EVENT */
-        fprintf(fd, "<event>\n" \
-                "<eventname><![CDATA[%s]]></eventname>\n" \
-                "<stats count=\"%lu\">\n" \
-                "<cputime total=\"%lf\" totalsq=\"%lf\" />\n" \
-                "<realtime total=\"%lf\" totalsq=\"%lf\" />\n" \
-                "<samples real=\"",
-                key,
-                entry->count, entry->cpu, entry->cpu_sq,
-                entry->real, entry->real_sq);
+        fprintf(fd,
+                "<event>\n"
+                  "<eventname><![CDATA[%s]]></eventname>\n"
+                  "<stats count=\"%lu\">\n"
+                  "<cputime total=\"%lf\" totalsq=\"%lf\" />\n"
+                  "<realtime total=\"%lf\" totalsq=\"%lf\" />\n"
+                  "<samples real=\"",
+                task, entry->count, entry->cpu, entry->cpu_sq, entry->real,
+                entry->real_sq);
 
         if (entry->count >= POINTS) {
             points = POINTS;
