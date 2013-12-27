@@ -7,3 +7,7 @@ mwprof: mwprof.c collector.c
 
 clean:
 	rm -f mwprof
+
+install:
+	mkdir -p /srv/deployment/mwprof/mwprof
+	cp mwprof /srv/deployment/mwprof/mwprof/mwprof

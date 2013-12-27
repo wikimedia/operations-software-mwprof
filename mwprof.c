@@ -16,7 +16,6 @@
 
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_32
 
-#include <errno.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
@@ -57,10 +56,12 @@ serve_xml(
     out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     g_output_stream_splice(out, in, G_OUTPUT_STREAM_SPLICE_NONE, NULL, NULL);
 
+    g_output_stream_close(out, NULL, NULL);
+    g_input_stream_close(in, NULL, NULL);
     g_object_unref(in);
     fclose(temp);
 
-    return FALSE;
+    return TRUE;
 }
 
 /* Process profiling samples coming in via UDP. */
