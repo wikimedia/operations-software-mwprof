@@ -12,9 +12,9 @@
 #include <glib.h>
 #include "mwprof.h"
 
-/* Decides what to do with sample UDP message */
+/* Parse a profiling sample and update aggregated stats */
 void
-handleMessage(gchar *buffer) {
+handle_message(gchar *buffer) {
     gchar *host, *db, *task;
     gchar *line, *saveptr, *token;
     CallStats sample;
@@ -29,7 +29,7 @@ handleMessage(gchar *buffer) {
         }
 
         if (g_str_has_prefix(buffer, "-truncate")) {
-            truncateData();
+            truncate_data();
             continue;
         }
 
@@ -83,19 +83,19 @@ handleMessage(gchar *buffer) {
         task = saveptr;
 
         // Update the DB-specific entry
-        updateEntry(db, host, task, &sample);
+        update_entry(db, host, task, &sample);
 
         // Update the aggregate entry
         if (g_str_has_prefix(db, "stats/")) {
-            updateEntry("stats/all", "-", task, &sample);
+            update_entry("stats/all", "-", task, &sample);
         } else {
-            updateEntry("all", "-", task, &sample);
+            update_entry("all", "-", task, &sample);
         }
     }
 }
 
 void
-updateEntry(gchar *db, gchar *host, gchar *task, CallStats *sample) {
+update_entry(gchar *db, gchar *host, gchar *task, CallStats *sample) {
     gchar key[1500];
     CallStats *entry;
 
@@ -125,34 +125,39 @@ updateEntry(gchar *db, gchar *host, gchar *task, CallStats *sample) {
 }
 
 void
-truncateData() {
+truncate_data() {
     G_LOCK(table);
     g_hash_table_remove_all(table);
     G_UNLOCK(table);
 }
 
-void
-dumpData(FILE *fd) {
-    GList *keys;
+
+GString *
+generate_xml() {
+    GList *keys, *node;
+    GString *xml;
+
     gchar **tokens;
-    gchar *key;
     gchar db[128] = "", prev_db[128] = "", host[128] = "", prev_host[128] = "",
           task[1024] = "";
     gint in_db = 0, in_host = 0;
     gint i, points;
     CallStats *entry;
 
-    fprintf(fd, "<pfdump>\n");
 
     G_LOCK(table);
+
+    xml = g_string_sized_new(1024 * g_hash_table_size(table));
+
+    g_string_append_printf(xml, "<pfdump>\n");
+
     keys = g_hash_table_get_keys(table);
     keys = g_list_sort(keys, (GCompareFunc) strcmp);
-    for (; keys != NULL; keys = g_list_next(keys)) {
-        key = keys->data;
-        entry = g_hash_table_lookup(table, key);
+    for (node = keys; node; node = node->next) {
+        entry = g_hash_table_lookup(table, node->data);
         g_mutex_lock(&entry->mutex);
 
-        tokens = g_strsplit(key, ":", 3);
+        tokens = g_strsplit(node->data, ":", 3);
         g_assert(g_strv_length(tokens) == 3);
         g_strlcpy(db, tokens[0], 128);
         g_strlcpy(host, tokens[1], 128);
@@ -162,11 +167,11 @@ dumpData(FILE *fd) {
         /* Get DB */
         if (g_strcmp0(db, prev_db)) {
             if (in_db) {
-                fprintf(fd, "</host></db>");
+                g_string_append_printf(xml, "</host></db>");
                 in_host = 0;
                 prev_host[0] = 0;
             }
-            fprintf(fd, "<db name=\"%s\">\n", db);
+            g_string_append_printf(xml, "<db name=\"%s\">\n", db);
             g_strlcpy(prev_db, db, 128);
             in_db++;
         }
@@ -174,15 +179,15 @@ dumpData(FILE *fd) {
         /* Get Host/Context */
         if (g_strcmp0(host, prev_host)) {
             if (in_host) {
-                fprintf(fd, "</host>\n");
+                g_string_append_printf(xml, "</host>\n");
             }
-            fprintf(fd, "<host name=\"%s\">\n", host);
+            g_string_append_printf(xml, "<host name=\"%s\">\n", host);
             g_strlcpy(prev_host, host, 128);
             in_host++;
         }
 
         /* Get EVENT */
-        fprintf(fd,
+        g_string_append_printf(xml,
                 "<event>\n"
                   "<eventname><![CDATA[%s]]></eventname>\n"
                   "<stats count=\"%lu\">\n"
@@ -199,14 +204,16 @@ dumpData(FILE *fd) {
         }
 
         for (i = 0; i < points - 1; i++) {
-            fprintf(fd, "%lf ", entry->reals[i]);
+            g_string_append_printf(xml, "%lf ", entry->reals[i]);
         }
 
-        fprintf(fd, "%lf", entry->reals[points-1]);
-        fprintf(fd, "\" />\n</stats></event>\n");
+        g_string_append_printf(xml, "%lf", entry->reals[points-1]);
+        g_string_append_printf(xml, "\" />\n</stats></event>\n");
         g_mutex_unlock(&entry->mutex);
     }
     g_list_free(keys);
-    fprintf(fd, "</host>\n</db>\n</pfdump>\n");
+    g_string_append_printf(xml, "</host>\n</db>\n</pfdump>\n");
     G_UNLOCK(table);
+
+    return xml;
 }

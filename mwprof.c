@@ -42,25 +42,22 @@ serve_xml(
     GSocketListener         *listener,
     gpointer                user_data
 ) {
-    FILE *temp;
     GInputStream *in;
     GOutputStream *out;
+    GString *xml;
 
-    temp = tmpfile();
-    g_assert(temp != NULL);
+    xml = generate_xml();
 
-    dumpData(temp);
-    rewind(temp);
+    in = g_memory_input_stream_new_from_data(xml->str, xml->len, g_free);
+    g_slice_free(GString, xml);
 
-    in = g_unix_input_stream_new(fileno(temp), FALSE);
     out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    g_output_stream_splice(out, in, G_OUTPUT_STREAM_SPLICE_NONE, NULL, NULL);
-
-    g_output_stream_close(out, NULL, NULL);
-    g_input_stream_close(in, NULL, NULL);
+    g_output_stream_splice_async(out, in, G_OUTPUT_STREAM_SPLICE_CLOSE_SOURCE |
+                                 G_OUTPUT_STREAM_SPLICE_CLOSE_TARGET,
+                                 G_PRIORITY_DEFAULT, NULL,
+                                 (GAsyncReadyCallback)g_output_stream_splice_finish,
+                                 NULL);
     g_object_unref(in);
-    fclose(temp);
-
     return TRUE;
 }
 
@@ -91,7 +88,7 @@ listen_stats(gpointer data) {
         nbytes = g_socket_receive(stats_sock, buf, sizeof(buf)-1, NULL, &error);
         g_assert_no_error(error);
         buf[nbytes] = '\0';
-        handleMessage(buf);
+        handle_message(buf);
     }
 }
 
@@ -129,12 +126,13 @@ main(int argc, char **argv) {
     g_thread_unref(listener);
 
     // Serve XML via a TCP socket service running on GLib's main event loop.
-    service = g_threaded_socket_service_new(10);
+    service = g_socket_service_new();
     g_socket_listener_add_inet_port(G_SOCKET_LISTENER(service), listen_port,
                                     NULL, &error);
     g_assert_no_error(error);
-    g_signal_connect(service, "run", G_CALLBACK(serve_xml), NULL);
-    g_main_loop_run(g_main_loop_new(NULL, FALSE));
+    g_signal_connect(service, "incoming", G_CALLBACK(serve_xml), NULL);
+    g_socket_service_start(service);
 
+    g_main_loop_run(g_main_loop_new(NULL, FALSE));
     g_assert_not_reached();
 }

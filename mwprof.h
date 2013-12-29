@@ -28,9 +28,9 @@ typedef struct CallStats {
     gdouble reals[POINTS];
 } CallStats;
 
-void dumpData(FILE *fd);
-void truncateData();
-void handleMessage(gchar *buffer);
-void updateEntry(char *db, char *host, char *task, CallStats *sample);
+GString * generate_xml();
+void truncate_data();
+void handle_message(gchar *buffer);
+void update_entry(char *db, char *host, char *task, CallStats *sample);
 
 #endif  // MWPROF_H_
