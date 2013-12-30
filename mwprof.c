@@ -1,19 +1,13 @@
 /**
  * mwprof -- aggregate MediaWiki profiling samples
  *
- * Listen on a UDP port for profiling samples emitted by MediaWiki's
- * ProfilerSimpleUDP. Serve summary stats as XML via TCP on the same port
- * number. The port number is 3811 by default, but a different value may be
- * specified via the "--listen-port" command-line argument.
+ * Written in 2005 - 2013 by Domas Mituzas <domas@mituzas.lt>,
+ * Tim Starling <tstarling@wikimedia.org>, and Ori Livneh <ori@wikimedia.org>.
  *
- * Author: Domas Mituzas ( http://dammit.lt/ )
- * Author: Asher Feldman ( afeldman@wikimedia.org )
- * Author: Tim Starling ( tstarling@wikimedia.org )
- * Author: Ori Livneh ( ori@wikimedia.org)
- *
- * License: public domain (as if there's something to protect ;-)
+ * To the extent possible under law, the authors have dedicated all copyright
+ * and related and neighboring rights to this software to the public domain
+ * worldwide. This software is distributed without any warranty.
  */
-
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_32
 
 #include <glib.h>
@@ -50,7 +44,6 @@ serve_xml(
 
     in = g_memory_input_stream_new_from_data(xml->str, xml->len, g_free);
     g_slice_free(GString, xml);
-
     out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     g_output_stream_splice_async(out, in, G_OUTPUT_STREAM_SPLICE_CLOSE_SOURCE |
                                  G_OUTPUT_STREAM_SPLICE_CLOSE_TARGET,

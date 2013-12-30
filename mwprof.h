@@ -1,12 +1,13 @@
 /**
- * Author: Domas Mituzas ( http://dammit.lt/ )
- * Author: Asher Feldman ( afeldman@wikimedia.org )
- * Author: Tim Starling ( tstarling@wikimedia.org )
- * Author: Ori Livneh ( ori@wikimedia.org)
+ * mwprof -- aggregate MediaWiki profiling samples
  *
- * License: public domain (as if there's something to protect ;-)
+ * Written in 2005 - 2013 by Domas Mituzas <domas@mituzas.lt>,
+ * Tim Starling <tstarling@wikimedia.org>, and Ori Livneh <ori@wikimedia.org>.
+ *
+ * To the extent possible under law, the authors have dedicated all copyright
+ * and related and neighboring rights to this software to the public domain
+ * worldwide. This software is distributed without any warranty.
  */
-
 #ifndef MWPROF_H_
 #define MWPROF_H_
 
