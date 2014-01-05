@@ -1,12 +1,21 @@
 /**
  * mwprof -- aggregate MediaWiki profiling samples
  *
- * Written in 2005 - 2013 by Domas Mituzas <domas@mituzas.lt>,
- * Tim Starling <tstarling@wikimedia.org>, and Ori Livneh <ori@wikimedia.org>.
+ * Copyright 2005 Domas Mituzas <domas@mituzas.lt>
+ * Copyright 2011 Tim Starling <tstarling@wikimedia.org>
+ * Copyright 2013 Ori Livneh <ori@wikimedia.org>
  *
- * To the extent possible under law, the authors have dedicated all copyright
- * and related and neighboring rights to this software to the public domain
- * worldwide. This software is distributed without any warranty.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include <string.h>
 #include <glib.h>
