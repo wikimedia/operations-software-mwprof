@@ -8,10 +8,9 @@
  * and related and neighboring rights to this software to the public domain
  * worldwide. This software is distributed without any warranty.
  */
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <glib/gprintf.h>
 #include "mwprof.h"
 
 /* Parse a profiling sample and update aggregated stats */
@@ -53,7 +52,7 @@ handle_message(gchar *buffer) {
         if (token == NULL) {
             continue;
         }
-        sample.count = strtoull(token, NULL, 10);
+        sample.count = g_ascii_strtoull(token, NULL, 10);
 
         token = strtok_r(NULL, " ", &saveptr);
         if (token == NULL) {
@@ -101,7 +100,7 @@ update_entry(gchar *db, gchar *host, gchar *task, CallStats *sample) {
     gchar key[1500];
     CallStats *entry;
 
-    snprintf(key, sizeof(key) - 1, "%s:%s:%s", db, host, task);
+    g_snprintf(key, sizeof(key), "%s:%s:%s", db, host, task);
     entry = g_hash_table_lookup(table, key);
     if (entry == NULL) {
         entry = g_new0(CallStats, 1);

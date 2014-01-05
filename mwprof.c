@@ -12,7 +12,6 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-#include <gio/gunixinputstream.h>
 #include "mwprof.h"
 
 GHashTable *table;
@@ -28,6 +27,19 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
+/* Parse command-line arguments. */
+static void
+parse_args(int argc, char **argv) {
+    GOptionContext *context = g_option_context_new(NULL);
+    GError *error = NULL;
+
+    g_option_context_set_summary(context, "Aggregate MediaWiki profiling samples");
+    g_option_context_add_main_entries(context, entries, NULL);
+    g_option_context_parse(context, &argc, &argv, &error);
+    g_assert_no_error(error);
+    g_option_context_free(context);
+}
+
 /* Answers incoming TCP connections with an XML stats dump. */
 static gboolean
 serve_xml(
@@ -40,8 +52,9 @@ serve_xml(
     GOutputStream *out;
     GString *xml;
 
+    // Generate full dump XML into a buffer, then wrap the full buffer as a
+    // GMemoryInputStream, then splice it into the socket's output stream.
     xml = generate_xml();
-
     in = g_memory_input_stream_new_from_data(xml->str, xml->len, g_free);
     g_slice_free(GString, xml);
     out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
@@ -83,20 +96,6 @@ listen_stats(gpointer data) {
         buf[nbytes] = '\0';
         handle_message(buf);
     }
-}
-
-/* Parse command-line arguments. */
-static void
-parse_args(int argc, char **argv) {
-    GOptionContext *context = g_option_context_new(NULL);
-    GError *error = NULL;
-
-    g_option_context_set_summary(context,
-                                 "Aggregate MediaWiki profiling samples");
-    g_option_context_add_main_entries(context, entries, NULL);
-    g_option_context_parse(context, &argc, &argv, &error);
-    g_assert_no_error(error);
-    g_option_context_free(context);
 }
 
 int

@@ -11,7 +11,6 @@
 #ifndef MWPROF_H_
 #define MWPROF_H_
 
-#include <stdio.h>
 #include <glib.h>
 #define POINTS 300
 
