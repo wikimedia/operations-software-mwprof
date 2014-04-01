@@ -1,7 +1,0 @@
-report.py is a simple cgi script that provides a web interface for mwprof data.
-It expects a configuration file at /etc/mwprof/report.cfg with the following
-format:
-
-    [server]
-    host = tungsten.eqiad.wmnet
-    port = 3812
